@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Application</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #d0d0d0, #e0e0e0);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to right, #d4af37, #b8860b);
+            color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-logo .logo {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        /* Container Styles */
+        .container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+            margin: 10px;
+            /* Added margin for spacing */
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 200px;
+            background: linear-gradient(to bottom, #343a40, #1c1e21);
+            color: white;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-link {
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background-color: #495057;
+            transform: translateX(5px);
+        }
+
+        /* Content Styles */
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: linear-gradient(to right, #ffffff, #f5f5f5);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-left: 10px;
+            /* Adjusted margin */
+        }
+
+        .email-section {
+            display: none;
+        }
+
+        .email-section.visible {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .email-item {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .email-item:hover {
+            transform: scale(1.02);
+            background-color: #f8f9fa;
+        }
+
+        .email-item .mark-as-read {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .email-item .mark-as-read.read {
+            background-color: #28a745;
+        }
+
+        .email-item .delete-email {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .email-item .mark-as-read,
+        .email-item .delete-email {
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .email-item .mark-as-read:hover,
+        .email-item .delete-email:hover {
+            opacity: 0.8;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            max-width: 90%;
+            position: relative;
+        }
+
+        .modal-header {
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .compose-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .compose-form input,
+        .compose-form textarea {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .compose-form textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .compose-form button {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .compose-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .compose-success-message {
+            display: none;
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Profile Section Styles */
+        .profile-details {
+            text-align: center;
+        }
+
+        .profile-details .profile-pic {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+
+        .profile-email-list {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .profile-email-list button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .profile-email-list button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Logo" class="logo"> <!-- Your logo image -->
+            <span>Email App</span>
+        </div>
+        <div class="navbar-profile">
+            <img src="profile.png" alt="Profile" id="profileButton" class="profile-icon"> <!-- Your profile image -->
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" id="inboxLink" class="sidebar-link active">Inbox</a>
+            <a href="#" id="draftsLink" class="sidebar-link">Drafts</a>
+            <a href="#" id="sentLink" class="sidebar-link">Sent</a>
+            <a href="#" id="primaryLink" class="sidebar-link">Primary</a>
+            <button id="composeButton">Compose</button>
+        </div>
+
+        <div class="content">
+            <div id="inbox" class="email-section visible"></div>
+            <div id="drafts" class="email-section"></div>
+            <div id="sent" class="email-section"></div>
+            <div id="primary" class="email-section"></div>
+        </div>
+    </div>
+
+    <!-- Compose Modal -->
+    <div id="composeModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div class="modal-header">
+                <h2>Compose Email</h2>
+            </div>
+            <form id="composeForm" class="compose-form">
+                <input type="email" id="toEmail" placeholder="To" required>
+                <input type="text" id="subject" placeholder="Subject" required>
+                <textarea id="message" placeholder="Message" required></textarea>
+                <button type="submit">Send</button>
+            </form>
+            <div class="compose-success-message" id="composeSuccessMessage">Email sent successfully!</div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div class="profile-details">
+                <img src="profile.png" alt="Profile Picture" class="profile-pic">
+                <h2 id="profileEmail">Karthik@example.com</h2>
+            </div>
+            <div class="profile-email-list">
+                <button class="profile-email" data-email="Karthik@example.com">Karthik@example.com</button>
+                <button class="profile-email" data-email="Harsha@example.com">Harsha@example.com</button>
+                <button class="profile-email" data-email="Bhaskar@example.com">Bhaskar@example.com</button>
+                <button class="profile-email" data-email="Preethi@example.com">Preethi@example.com</button>
+                <button class="profile-email" data-email="Reshma@example.com">Reshma@example.com</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial emails for different accounts
+            const emailAccounts = {
+                "user@example.com": {
+                    inbox: [{
+                            subject: "Welcome!",
+                            message: "Welcome to our email service.",
+                            timestamp: "2023-01-01 10:00"
+                        },
+                        {
+                            subject: "Meeting",
+                            message: "Reminder for the meeting tomorrow.",
+                            timestamp: "2023-01-02 09:00"
+                        },
+                    ],
+                    drafts: [{
+                        subject: "Draft 1",
+                        message: "This is a draft email.",
+                        timestamp: "2023-01-03 08:00"
+                    }, ],
+                    sent: [{
+                        subject: "Sent Email",
+                        message: "This email has been sent.",
+                        timestamp: "2023-01-04 07:00"
+                    }, ],
+                    primary: [{
+                        subject: "Primary Email",
+                        message: "This is a primary email.",
+                        timestamp: "2023-01-05 06:00"
+                    }, ]
+                },
+                "user1@example.com": {
+                    inbox: [{
+                        subject: "Hello!",
+                        message: "This is user1's inbox email.",
+                        timestamp: "2023-02-01 10:00"
+                    }, ],
+                    drafts: [],
+                    sent: [],
+                    primary: []
+                },
+                "user2@example.com": {
+                    inbox: [{
+                        subject: "Hi!",
+                        message: "This is user2's inbox email.",
+                        timestamp: "2023-03-01 10:00"
+                    }, ],
+                    drafts: [],
+                    sent: [],
+                    primary: []
+                },
+                "user3@example.com": {
+                    inbox: [{
+                        subject: "Greetings!",
+                        message: "This is user3's inbox email.",
+                        timestamp: "2023-04-01 10:00"
+                    }, ],
+                    drafts: [],
+                    sent: [],
+                    primary: []
+                },
+                "user4@example.com": {
+                    inbox: [{
+                        subject: "News",
+                        message: "This is user4's inbox email.",
+                        timestamp: "2023-05-01 10:00"
+                    }, ],
+                    drafts: [],
+                    sent: [],
+                    primary: []
+                },
+            };
+
+            const profileButton = document.getElementById('profileButton');
+            const profileModal = document.getElementById('profileModal');
+            const profileClose = profileModal.querySelector('.modal-close');
+            const profileEmail = document.getElementById('profileEmail');
+            const emailSections = document.querySelectorAll('.email-section');
+
+            const profileEmailButtons = document.querySelectorAll('.profile-email');
+            let currentEmailAccount = "user@example.com";
+
+            profileButton.addEventListener('click', () => {
+                profileModal.classList.remove('hidden');
+                profileEmail.textContent = currentEmailAccount;
+            });
+
+            profileClose.addEventListener('click', () => {
+                profileModal.classList.add('hidden');
+            });
+
+            profileEmailButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    currentEmailAccount = event.target.dataset.email;
+                    profileEmail.textContent = currentEmailAccount;
+                    profileModal.classList.add('hidden');
+                    loadEmails();
+                });
+            });
+
+            const loadEmails = () => {
+                emailSections.forEach(section => {
+                    section.innerHTML = ''; // Clear the section
+                });
+
+                const accountEmails = emailAccounts[currentEmailAccount];
+                for (let section in accountEmails) {
+                    const emailSection = document.getElementById(section);
+                    accountEmails[section].forEach(email => {
+                        const emailDiv = document.createElement('div');
+                        emailDiv.classList.add('email-item');
+                        emailDiv.innerHTML = `
+                            <h3>${email.subject}</h3>
+                            <p>${email.message}</p>
+                            <small>${email.timestamp}</small>
+                            <button class="mark-as-read">Mark as Read</button>
+                            <button class="delete-email">Delete</button>
+                        `;
+                        emailSection.appendChild(emailDiv);
+                    });
+                }
+            };
+
+            loadEmails();
+
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+
+                    const target = link.id.replace('Link', '');
+                    emailSections.forEach(section => {
+                        section.classList.remove('visible');
+                        if (section.id === target) {
+                            section.classList.add('visible');
+                        }
+                    });
+                });
+            });
+
+            const composeButton = document.getElementById('composeButton');
+            const composeModal = document.getElementById('composeModal');
+            const composeClose = composeModal.querySelector('.modal-close');
+            const composeForm = document.getElementById('composeForm');
+            const composeSuccessMessage = document.getElementById('composeSuccessMessage');
+
+            composeButton.addEventListener('click', () => {
+                composeModal.classList.remove('hidden');
+            });
+
+            composeClose.addEventListener('click', () => {
+                composeModal.classList.add('hidden');
+            });
+
+            composeForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const toEmail = document.getElementById('toEmail').value;
+                const subject = document.getElementById('subject').value;
+                const message = document.getElementById('message').value;
+                const timestamp = new Date().toLocaleString();
+
+                if (!emailAccounts[currentEmailAccount].inbox) {
+                    emailAccounts[currentEmailAccount].inbox = [];
+                }
+                emailAccounts[currentEmailAccount].inbox.push({
+                    subject,
+                    message,
+                    timestamp
+                });
+                composeSuccessMessage.style.display = 'block';
+
+                setTimeout(() => {
+                    composeSuccessMessage.style.display = 'none';
+                    composeModal.classList.add('hidden');
+                    loadEmails();
+                }, 1500);
+            });
+
+            document.addEventListener('click', (event) => {
+                if (event.target.classList.contains('mark-as-read')) {
+                    event.target.classList.add('read');
+                    event.target.textContent = 'Read';
+                }
+                if (event.target.classList.contains('delete-email')) {
+                    const emailItem = event.target.closest('.email-item');
+                    const section = emailItem.parentElement.id;
+                    emailItem.remove();
+                    const emailIndex = Array.from(emailItem.parentElement.children).indexOf(emailItem);
+                    emailAccounts[currentEmailAccount][section].splice(emailIndex, 1);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
